@@ -1,0 +1,20 @@
+#!/bin/sh
+for i in `find *.sh`
+do
+		cp "../pvdz/test.sh" $i
+		base=`echo $i | sed "s/.sh//g"`
+		basis="pvtz"
+		cp "$i" "$i.sedsave"
+		sed "s/testrun/$base.$basis/g" "$i.sedsave" > "$i"
+		rm "$i.sedsave"
+
+cat >& "$base.$basis.gjf" << EOF
+%chk=$base.$basis.chk
+%mem=1800MB
+%nproc=1
+# opt=(calcall) freq b3lyp/cc-pVTZ guess=read geom=(allcheck,angle)
+
+$base runfile
+
+EOF
+done

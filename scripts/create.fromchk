@@ -1,0 +1,16 @@
+#!/bin/sh
+for i in `find *.chk`
+do
+		basestr=`echo $i | sed "s/.chk//g"`
+		base=`echo $basestr | sed "s/\.[A-Za-z0-9\-]\+//g"`
+		basis=`echo $basestr | sed "s/[A-Za-z0-9\-]\+\.//g"`
+cat >& "$base.$basis.gjf" << EOF
+%chk=$base.$basis.chk
+%mem=1800MB
+%nproc=1
+# opt=(calcall) freq b3lyp/cc-pVTZ guess=read geom=(allcheck,angle)
+
+$base - $basis runfile
+
+EOF
+done

@@ -1,0 +1,4 @@
+#!/bin/sh
+cd $PBS_O_WORKDIR
+g03 BCAR-NO2.3-21.gjf BCAR-NO2.3-21.log
+g03 BCAR-NO2.6-311.gjf BCAR-NO2.6-311.log
