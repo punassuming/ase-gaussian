@@ -5,8 +5,8 @@ from ase.calculators.jacapo import Jacapo
 from cclib.parser import Gaussian
 #from pylab import *
 import logging
-from rca import geom_
-from ase.gui import view
+import geom
+from ase.gui.view import View
 import numpy
 from ase.atoms import Atoms
 
@@ -137,9 +137,9 @@ class Cwrap():
 
     def view(self):
         if self.type == 'nc':
-            view(self.data)
+            View(self.data)
         elif self.type == 'gau':
-            view(Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
+            View(Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
 
     def get_dis(self, a1, a2):
         return False
