@@ -8,6 +8,11 @@ from optparse import OptionParser
 parser = OptionParser(usage='compsum',
 					  version='0.01')
 
+
+parser.add_option('-d',
+				nargs=0,
+				help = 'Print descriptors')
+
 parser.add_option('-e',
 				nargs=0,
 				help = 'print only the energy')
@@ -18,7 +23,24 @@ parser.add_option('-c',
 
 parser.add_option('-f',
 				nargs=0,
-				help = 'print only the charges on all atoms')
+				help = 'print all frequencies')
+
+parser.add_option('-v',
+				nargs=0,
+				help = 'print all frequencies')
+
+parser.add_option('-m',
+                nargs=0,
+                help = 'print only the mulliken charges on all atoms')
+
+parser.add_option('-g',
+                nargs=0,
+                help = 'print only the CHELPG charges on all atoms')
+
+parser.add_option('-n',
+                nargs=0,
+                help = 'print only the NBO charges on all atoms')
+
 
 options,args = parser.parse_args()
 
@@ -28,12 +50,32 @@ for arg in args:
 
 	calc = Cwrap(arg)
 
-	if options.e is not None:
-		print 'Energy is %0.4f eV' % calc.get_nrg()
+	if options.v is not None:
+		calc.view()
 
-	if options.c is not None:
-		for i in range(0,calc.get_natoms()):
-			print 'Atom %i : %i has charge : %0.4f' % (i, calc.get_atoms()[i], float(calc.get_charge()[i]))
+	if options.e is not None:
+		description = 'Energy is ' if options.d is not None else ''
+		print '%s%0.4f eV' % (description, calc.get_nrg())
+
+    if options.c is not None:
+        print "APT Charges"
+        for i in range(0,calc.get_natoms()):
+            print 'Atom %i : %i : %0.4f' % (i+1, calc.get_atm()[i], float(calc.get_chg()[i]))
+
+    if options.m is not None:
+        print "Mulliken Charges"
+        for i in range(0,calc.get_natoms()):
+            print 'Atom %i : %i : %0.4f' % (i+1, calc.get_atm()[i], float(calc.get_mulliken()[i]))
+
+    if options.g is not None:
+        print "CHELPG Charges"
+        for i in range(0,calc.get_natoms()):
+            print 'Atom %i : %i : %0.4f' % (i+1, calc.get_atm()[i], float(calc.get_chelpg()[i]))
+
+    if options.n is not None:
+        print "Natural Bonding Orbitals"
+        for i in range(0,calc.get_natoms()):
+            print 'Atom %i : %i : %0.4f' % (i+1, calc.get_atm()[i], float(calc.get_nbo()[i]))
 	
 	if options.f is not None:
 		print 'IR Vibrational Frequency %s' % ([round(round(i,4),2) for i in calc.get_vib()])

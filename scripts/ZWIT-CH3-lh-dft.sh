@@ -1,4 +1,0 @@
-#!/bin/sh
-cd $PBS_O_WORKDIR
-g03 ZWIT-CH3.3-21.gjf ZWIT-CH3.3-21.log
-g03 ZWIT-CH3.6-311.gjf ZWIT-CH3.6-311.log

@@ -9,7 +9,7 @@ Author: Rich Alesi
 
 """
 import os, sys
-from Jacapo import Jacapo #@UnresolvedImport
+from Jacapo import Jacapo
 #from ase import *
 from cclib.parser import Gaussian
 import logging

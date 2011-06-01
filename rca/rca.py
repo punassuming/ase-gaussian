@@ -1,12 +1,12 @@
 #!/bin/env python
 # Make all these imports only apply to the sections that need them (make CLI faster)
 import os, re
-from ase.calculators.jacapo import Jacapo
+import Jacapo
 from cclib.parser import Gaussian
 #from pylab import *
 import logging
 import geom
-from ase.gui.view import View
+from ase.gui import view
 import numpy
 from ase.atoms import Atoms
 
@@ -60,7 +60,7 @@ class Cwrap():
                 # read directly from nc to avoid calculation
                 #self.data = netCDF(filename,'r')
                 self.data = Jacapo.read_atoms(filename)
-            elif ext == 'out' or ext == 'g03' or ext == 'log' or ext == 'g09':
+            elif ext == 'out' or ext == 'g03' or ext == 'log':
                 gout = Gaussian(filename)
                 gout.logger.setLevel(logging.ERROR)
                 self.type = 'gau'
@@ -84,6 +84,13 @@ class Cwrap():
         elif self.type == 'gau':
             atom = self.data.atomnos
         return atom
+
+    def get_natoms(self):
+        if self.type == 'nc':
+            natom = len(self.data.get_atomic_numbers())
+        elif self.type == 'gau':
+            natom = len(self.data.atomnos)
+        return natom
 
     def get_nrg(self):
         if self.type == 'nc':
@@ -118,6 +125,35 @@ class Cwrap():
             charges = [0 for i in self.get_natoms()]
         return charges
 
+    def get_chelpg(self):
+        if self.type == 'gau':
+            f = open(self.file)
+            f = f.read()
+            #regexp = re.compile('(?:Charge=\s+[0-9\.]+\sDipole=+\s+[ 0-9\.\-]+Tot=[0-9\.]+\s+\d+\s+)[0-9\.\-A-Za-z\s]*')
+            regexp = re.compile('(?:Charge=\s+[0-9\.\ \-A-Z a-z\=]*Tot=\s+)[0-9\.\-A-Za-z\s]*')
+            #print regexp.findall(f)[-1].split('\n')[2:-3]
+            charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-2]]
+            return charges
+
+    def get_mulliken(self):
+        if self.type == 'gau':
+            f = open(self.file)
+            f = f.read()
+            # Apt atomic charges
+            regexp = re.compile('(?:Mulliken atomic charges:\s+\d+\s+)[0-9\.\-A-Za-z\s]*')
+            charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-1]]
+            return charges
+
+    def get_nbo(self):
+        if self.type == 'gau':
+            f = open(self.file)
+            f = f.read()
+            # Apt atomic charges
+            regexp = re.compile('(?:Core\s+Valence\s+Rydberg\s+Total\s+[-]+)[0-9\.\-A-Za-z\s]*')
+            #print regexp.findall(f)[-1].split('\n')[2:-1]
+            charges = [i.split()[2] for i in regexp.findall(f)[-1].split('\n')[2:-1]]
+            return charges
+
     def get_frc(self):
         if self.type == 'nc':
             force = self.data.get_forces()
@@ -137,9 +173,9 @@ class Cwrap():
 
     def view(self):
         if self.type == 'nc':
-            View(self.data)
+            view(self.data)
         elif self.type == 'gau':
-            View(Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
+            view(Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
 
     def get_dis(self, a1, a2):
         return False
@@ -151,5 +187,5 @@ class Cwrap():
         l1 = self.get_bond_length(a1,a2)
         l2 = self.get_bond_length(a2,a3)
         angle = numpy.arctan(l2/l1)
-        return geom_.degrees(angle)
+        return geom.degrees(angle)
 
