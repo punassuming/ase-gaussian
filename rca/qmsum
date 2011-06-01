@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+
+from rca import *
+import sys
+import os
+from optparse import OptionParser
+
+parser = OptionParser(usage='compsum',
+					  version='0.01')
+
+
+parser.add_option('-d',
+				nargs=0,
+				help = 'Print descriptors')
+
+parser.add_option('-e',
+				nargs=0,
+				help = 'print only the energy')
+
+parser.add_option('-c',
+				nargs=0,
+				help = 'print only the charges on all atoms')
+
+parser.add_option('-f',
+				nargs=0,
+				help = 'print all frequencies')
+
+parser.add_option('-v',
+				nargs=0,
+				help = 'print all frequencies')
+
+
+options,args = parser.parse_args()
+
+for arg in args:
+	if not os.path.exists(arg):
+		raise Exception, "File does not exist"
+
+	calc = Cwrap(arg)
+
+	if options.v is not None:
+		calc.view()
+
+	if options.e is not None:
+		description = 'Energy is ' if options.d is not None else ''
+		print '%s%0.4f eV' % (description, calc.get_nrg())
+
+	if options.c is not None:
+		for i in range(0,calc.get_natoms()):
+			print 'Atom %i : %i has charge : %0.4f' % (i, calc.get_atoms()[i], float(calc.get_charge()[i]))
+	
+	if options.f is not None:
+		print 'IR Vibrational Frequency %s' % ([round(round(i,4),2) for i in calc.get_vib()])

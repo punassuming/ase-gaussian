@@ -60,7 +60,7 @@ class Cwrap():
                 # read directly from nc to avoid calculation
                 #self.data = netCDF(filename,'r')
                 self.data = Jacapo.read_atoms(filename)
-            elif ext == 'out' or ext == 'g03' or ext == 'log':
+            elif ext == 'out' or ext == 'g03' or ext == 'log' or ext == 'g09':
                 gout = Gaussian(filename)
                 gout.logger.setLevel(logging.ERROR)
                 self.type = 'gau'
