@@ -1,7 +1,7 @@
 #!/bin/env python
 # Make all these imports only apply to the sections that need them (make CLI faster)
 import os, re
-import Jacapo
+from ase.calculators.jacapo import Jacapo
 from cclib.parser import Gaussian
 #from pylab import *
 import logging
