@@ -1,0 +1,9 @@
+setup.cfg
+setup.py
+gauss/__init__.py
+gauss.egg-info/PKG-INFO
+gauss.egg-info/SOURCES.txt
+gauss.egg-info/dependency_links.txt
+gauss.egg-info/entry_points.txt
+gauss.egg-info/not-zip-safe
+gauss.egg-info/top_level.txt

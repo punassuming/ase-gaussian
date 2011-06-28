@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: gauss
+Version: 0.15dev
+Summary: gaussian parser for integration with ASE objects
+Home-page: UNKNOWN
+Author: Rich Alesi
+Author-email: walesi
+License: UNKNOWN
+Description: UNKNOWN
+Keywords: qchem gaussian parse ase
+Platform: UNKNOWN
