@@ -3,21 +3,26 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Gauss's documentation!
+Welcome to ase-gaussian's documentation!
 =================================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
 .. automodule:: gauss
 
+Gaussian calculator
+===================
+
 .. autoclass:: Gaussian
-    :members:
+
+Gaussian data parser
+====================
 
 .. autoclass:: Parser
-    :members:
+
 
 Indices and tables
 ==================

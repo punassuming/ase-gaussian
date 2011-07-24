@@ -1,3 +1,4 @@
 from gauss import *
+from gaussian import Gaussian, GaussianParser, read
 
-__all__=['Cwrap']
+__all__=['gaussian']
