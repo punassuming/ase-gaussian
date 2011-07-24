@@ -51,20 +51,28 @@
 </ul>
 </div>
 <span class="target" id="module-gauss"></span><dl class="class">
-<dt id="gauss.Cwrap">
-<em class="property">class </em><tt class="descclassname">gauss.</tt><tt class="descname">Cwrap</tt><big>(</big><em>filename</em><big>)</big><a class="headerlink" href="#gauss.Cwrap" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class represents a universal wrapper for Gaussian and Dacapo Calculations.  With data from this class
-and by parsing information from the file name, we can compare data and get all pertinent data from python</p>
+<dt id="gauss.Gaussian">
+<em class="property">class </em><tt class="descclassname">gauss.</tt><tt class="descname">Gaussian</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#gauss.Gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Gaussian 98/03 log file.</p>
 <dl class="method">
-<dt id="gauss.Cwrap.get_ang">
-<tt class="descname">get_ang</tt><big>(</big><em>a1</em>, <em>a2</em>, <em>a3</em><big>)</big><a class="headerlink" href="#gauss.Cwrap.get_ang" title="Permalink to this definition">¶</a></dt>
-<dd><p>calculate angle from three points</p>
+<dt id="gauss.Gaussian.extract">
+<tt class="descname">extract</tt><big>(</big><em>inputfile</em>, <em>line</em><big>)</big><a class="headerlink" href="#gauss.Gaussian.extract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract information from the file object inputfile.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="gauss.Cwrap.get_pos">
-<tt class="descname">get_pos</tt><big>(</big><big>)</big><a class="headerlink" href="#gauss.Cwrap.get_pos" title="Permalink to this definition">¶</a></dt>
-<dd><p>get the positions of all the atoms</p>
+<dt id="gauss.Gaussian.normalisesym">
+<tt class="descname">normalisesym</tt><big>(</big><em>label</em><big>)</big><a class="headerlink" href="#gauss.Gaussian.normalisesym" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use standard symmetry labels instead of Gaussian labels.</p>
+<p>To normalise:
+(1) If label is one of [SG, PI, PHI, DLTA], replace by [sigma, pi, phi, delta]
+(2) replace any G or U by their lowercase equivalent</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">sym</span> <span class="o">=</span> <span class="n">Gaussian</span><span class="p">(</span><span class="s">&quot;dummyfile&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">normalisesym</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;A1&#39;</span><span class="p">,</span> <span class="s">&#39;AG&#39;</span><span class="p">,</span> <span class="s">&#39;A1G&#39;</span><span class="p">,</span> <span class="s">&quot;SG&quot;</span><span class="p">,</span> <span class="s">&quot;PI&quot;</span><span class="p">,</span> <span class="s">&quot;PHI&quot;</span><span class="p">,</span> <span class="s">&quot;DLTA&quot;</span><span class="p">,</span> <span class="s">&#39;DLTU&#39;</span><span class="p">,</span> <span class="s">&#39;SGG&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">map</span><span class="p">(</span><span class="n">sym</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<span class="go">[&#39;A1&#39;, &#39;Ag&#39;, &#39;A1g&#39;, &#39;sigma&#39;, &#39;pi&#39;, &#39;phi&#39;, &#39;delta&#39;, &#39;delta.u&#39;, &#39;sigma.g&#39;]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>

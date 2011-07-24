@@ -1,8 +1,26 @@
 #!/usr/bin/env python
 
 """
+Workflow
 
+*create Atoms object*
 
+from xyz
+>>> atoms = xyz_to_atoms(xyz_file)
+
+from logfile
+>>> gc = Gaussian('water')
+>>> atoms = gc.get_atoms()
+
+*sp calculation*
+>>> gc = Gaussian('single_point',job = {'SP':[]}, atoms=atoms)
+
+*using header file*
+>>> gc = Gaussian('using_header',header = '#P Opt=tight
+                   Pop=(chelpg,hirschfield)'
+
+from checkpoint ?
+ TODO use izmat to obtain input string from checkpoint
 """
 
 __docformat__ = 'restructuredtext'
@@ -11,7 +29,7 @@ import exceptions, glob, os, pickle, string
 import numpy as np
 import subprocess as sp
 from cclib.parser import Gaussian as gparse
-
+from ase import Atoms
 import logging
 
 try:
@@ -21,22 +39,32 @@ except:
 
 log = logging.getLogger('Gaussian')
 
-def from_checkpoint(filename):
+def coords_from_checkpoint(filename):
     if os.path.exists(filename):
         pass
 
-def from_log(filename)
+def coords_from_log(filename)
     if os.path.exists(filename):
         pass
+
+def xyz_to_atoms(filename)
+    if os.path.exists(filename):
+        pass
+
+def job_from_log(filename):
+    pass
 
 def read(basename)
-    """ return atoms and calculator from binary file
+    """ 
+    Return atoms object from following inputs:
 
-    atoms, calc = read('water')
+    chk, fchk, gjf, log, gc
+
+    atoms = read('water.chk')
     """
     calc = Gaussian(basename)
     atoms = calc.get_atoms()
-    return (atoms, calc)
+    return atoms
 
 class Gaussian():
     """
@@ -48,7 +76,7 @@ class Gaussian():
 
     # additional parameters are passed to kwargs for input file creation
     def __init__(self,
-                 basename = None,
+                 basename = 'g09_test',
                  output = None,
                  debug=logging.WARN,
                  **kwargs)
@@ -69,6 +97,18 @@ class Gaussian():
             'Scan':[],
             'Volume':[]
         }
+
+        default_kwrgs = {
+            'atoms':None,
+            'xc':'B3LYP',
+            'basis':'6-31+',
+            'job':{'SP':[]},
+            'multiplicity':1,
+            'charge':0,
+            'mem':0.5,
+            'header':None
+        }
+
         """
         Parameters that are defined
         
@@ -120,7 +160,9 @@ class Gaussian():
                 mem : float
                  value in GB to reserve for memory
 
-                debug : logging level used for parser and job creation
+                header : string 
+                 plain text header to overwrite entire job string, 
+                 ** disables the use of many methods **
 
                 header : string 
                  plain text header to overwrite entire job string, 
@@ -149,32 +191,206 @@ class Gaussian():
 
         self.debug = debug
         log.setLevel(debug)
-
-        self.kwargs = kwargs
         
-        # setup file associations
+        # set up parameters to look for
+        #self.pars = Gaussian.default_kwargs.copy()
+        #self.pars_uptodate = {}
+
+        #log.debug(self.pars)
+        
+        #for key in self.pars:
+            #self.pars_uptodate[key] = False
+
+
+        # setup file associations, self.chk, self.log, self.gc
         self.set_files(basename)
 
         # default to False and switch if job complete
         self.ready = False
 
 
-def set_files(self, basename):
-    """
-    set up filenames for binary, log and checkpoint files
-    """
+        # set up kwargs to change / add 
+        self.kwargs = Gaussian.default_kwargs.copy()
 
-    new_gc = basename+'.gc'
-
-    if not hasattr(self, 'gc'):
-        self.gc = new_gc
-
-    if new_gc != self.gc and not os.path.exist(new_gc):
-        log.debug('copying %s to %s' % (self.gc, new_gc))
-
+        # if gc file exists, load kwargs from file
         if os.path.exists(self.gc):
-            status = os.system('cp %s %s' % (self.gc, new_gc))
-        self.nc = new_gc
+            # load atoms and calculator information from binary file 
+            self.load_gc(self, self.gc)
 
-def _setup_parser(self):
+        self.command_kwargs = kwargs
+
+        # default is overwritten by gc which is overwritten by 
+
+    def load_gc(self, gcfile):
+        """ loads atoms and pertinent settings to calculator """
+
+            gc = open(gcfile, 'rb')
+
+            self.gc_kwargs = pickle.load(gc)
+
+            if 'atoms' not in old_kwargs:
+                log.debug('no atoms object was found in binary file')
+                gc.close()
+                raise Exception, 'binary file exists but does not contain atoms'
+
+    def save_gc(self, gcfile):
+        """ save atoms, calc and pertinent settings to calculator """
+
+        
+    def set_files(self, basename):
+        """ set up filenames for binary, log and checkpoint files """
+
+        gc = basename + '.gc'
+
+        # if not setup
+        if not hasattr(self, 'gc'):
+            self.gc = gc
+
+        # if different than previous and doesnt exist, copy from old
+        if gc != self.gc and not os.path.exist(gc):
+            log.debug('copying %s to %s' % (self.gc, gc))
+
+            if os.path.exists(self.gc):
+                status = os.system('cp %s %s' % (self.gc, gc))
+            self.gc = gc
+
+        # if exists, don't set it
+        elif os.path.exists(gc):
+            # get atoms object from gc
+            self.atoms = self.read_atoms(gc)
+            self.gc = gc
+
+        self.chk = basename + '.chk'
+
+        for possible_log in ['.log','.g03','.g09']:
+            if os.path.exists(basename + possible_log):
+                self.log = basename + possible_log
+
+        if not hasattr(self, 'log'):
+            self.log = basename+'.g09'
+
+    def get_atoms(self, gc):
+        """ return the atoms object associated with a calculator """
+
+        if hasattr(self, 'atoms'):
+            if self.atoms is None: 
+                return None
+            atoms = self.atoms.copy()
+            atoms.set_calculator(self)
+        else:
+            atoms = None
+        return atoms
+
+    def format_job_line(self):
+        pass
+
+    def format_input_string(self):
+        pass
+
+
+
+"""
+TODO Additional Functions Needed:
+    Molecular mass
+    ThetaROT
+    ZPE
+    Sum of Elect + ZPE
+    Gibbs
+    CPU Time
+"""
+
+class Parser(gparse):
+    """
+    This class represents a wrapper for cclib's gaussian parser
+    """
+
+    def __init__(self, logfile):
+        """
+        filename -- filename to get info from Gaussian logfile 
+        """
+        if os.path.exists(logfile):
+            super().__init__(logfile)
+            self.parse()
+            
+            self.file = open(logfile,'rb').read()
+
+
+    def get_pos(self):
+        """ get the positions of all the atoms """
+        return self.data.atomcoords[-1]
+
+    def get_atom(self):
+        return self.data.atomnos
+
+    def get_natoms(self):
+        return len(self.data.atomnos)
+
+    def get_potential_energy(self):
+        return self.data.scfenergies[-1]
+
+    def get_frequencies(self):
+        # this correction comes from Lang 96 for all DFT calculations in gparse
+        correction = 0.9613
+        vibfrq = []
+        for i in self.data.vibfreqs[-len(self.data.vibfreqs)/2:]:
+            vibfrq.append(i*correction)
+        return vibfrq
+
+    def get_basis(self):
+        return self.data.nbasis
+
+    def get_charge(self, method):
+        #if method in self.charge_methods.keys():
+            #regexp = re.compile(self.charge_methods[method])
+        if hasattr(self,'get_chg_'+method):
+            getchg = 'self.get_chg_%s()' % method
+            return eval(getchg)
+
+        def get_chg_apt(self):
+            f = self.file
+            regexp = re.compile('(?:APT atomic charges:\s+\d+\s+)[0-9\.\-A-Za-z\s]*')
+            charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-1]]
+            return charges
+
+        def get_chg_chelpg(self):
+            f = self.file
+            #regexp = re.compile('(?:Charge=\s+[0-9\.]+\sDipole=+\s+[ 0-9\.\-]+Tot=[0-9\.]+\s+\d+\s+)[0-9\.\-A-Za-z\s]*')
+            regexp = re.compile('(?:Charge=\s+[0-9\.\ \-A-Z a-z\=]*Tot=\s+)[0-9\.\-A-Za-z\s]*')
+            #print regexp.findall(f)[-1].split('\n')[2:-3]
+            charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-2]]
+            return charges
+
+        def get_chg_mulliken(self):
+            f = self.file
+            regexp = re.compile('(?:Mulliken atomic charges:\s+\d+\s+)[0-9\.\-A-Za-z\s]*')
+            charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-1]]
+            return charges
+
+        def get_chg_nbo(self):
+            f = self.file
+            regexp = re.compile('(?:Core\s+Valence\s+Rydberg\s+Total\s+[-]+)[0-9\.\-A-Za-z\s]*')
+            charges = [i.split()[2] for i in regexp.findall(f)[-1].split('\n')[2:-1]]
+            return charges
+
+    def get_forces(self):
+        f = self.file
+        regexp = re.compile('(?:Forces[A-Za-z\s\(\)\,\/]*[-]{67})[\s0-9\.\-]*')
+        forces = [i.split()[2:] for i in regexp.findall(f)[-1].split('\n')[3:-2]]
+        return forces
+
+    def make_atoms(self):
+        from ase import Atoms
+        self.atoms = Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
+
+def calculate_distance(self, a1, a2):
+    return False
+
+def calculate_angle(self, a1, a2, a3):
+    """
+    calculate angle from three points
+    """
+    l1 = self.get_bond_length(a1,a2)
+    l2 = self.get_bond_length(a2,a3)
+    angle = numpy.arctan(l2/l1)
+    return geom.degrees(angle)
 

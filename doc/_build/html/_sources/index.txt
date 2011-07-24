@@ -13,7 +13,10 @@ Contents:
 
 .. automodule:: gauss
 
-.. autoclass:: Cwrap
+.. autoclass:: Gaussian
+    :members:
+
+.. autoclass:: Parser
     :members:
 
 Indices and tables
