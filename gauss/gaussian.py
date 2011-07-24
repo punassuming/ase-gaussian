@@ -5,11 +5,19 @@
 
 """
 
+__docformat__ = 'restructuredtext'
+
 import exceptions, glob, os, pickle, string
 import numpy as np
 import subprocess as sp
+from cclib.parser import Gaussian as gparse
 
 import logging
+
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 log = logging.getLogger('Gaussian')
 
@@ -21,6 +29,14 @@ def from_log(filename)
     if os.path.exists(filename):
         pass
 
+def read(basename)
+    """ return atoms and calculator from binary file
+
+    atoms, calc = read('water')
+    """
+    calc = Gaussian(basename)
+    atoms = calc.get_atoms()
+    return (atoms, calc)
 
 class Gaussian():
     """
@@ -37,6 +53,22 @@ class Gaussian():
                  debug=logging.WARN,
                  **kwargs)
         
+        default_jobs = {
+            'Density':[],
+            'Force':[],
+            'Freq':[],
+            'Geom':[],
+            'Guess':[],
+            'Massage':[],
+            'NMR':[],
+            'Opt':[],
+            'Polar':[],
+            'Pop':[],
+            'SCRF':[],
+            'SP':[],
+            'Scan':[],
+            'Volume':[]
+        }
         """
         Parameters that are defined
         
@@ -75,16 +107,24 @@ class Gaussian():
                     ['Density','Force','Freq','Geom','Guess','Massage','NMR',
                      'Opt','Polar','Pop','SCRF','SP','Scan','Volume']
 
-                 note: Opt and Freq can be together, but not with SCRF
+                 ** Opt and Freq can be together, but not with SCRF **
 
                  e.g. a standard optimization will be {'opt':[]}
                  * a more complex string would be:
                     {'opt':['tight'],'freq':[],'pop':['Hirshfield','NBO']}
 
+                multiplicity : integer
+                
+                charge : integer
+
                 mem : float
                  value in GB to reserve for memory
 
                 debug : logging level used for parser and job creation
+
+                header : string 
+                 plain text header to overwrite entire job string, 
+                 ** disables the use of many methods **
 
             Instead of an input file, which is typically used for gaussian
             jobs, as ASE atoms object with calculator information is saved for
@@ -107,10 +147,34 @@ class Gaussian():
 
         """
 
-        #Asign filenames derived from basename
-        self.basename = basename
-        self.log = basename + '.log'
-        self.chk = basename + '.chk'
-        self.pick = basename + '.gc'
+        self.debug = debug
+        log.setLevel(debug)
 
+        self.kwargs = kwargs
+        
+        # setup file associations
+        self.set_files(basename)
+
+        # default to False and switch if job complete
+        self.ready = False
+
+
+def set_files(self, basename):
+    """
+    set up filenames for binary, log and checkpoint files
+    """
+
+    new_gc = basename+'.gc'
+
+    if not hasattr(self, 'gc'):
+        self.gc = new_gc
+
+    if new_gc != self.gc and not os.path.exist(new_gc):
+        log.debug('copying %s to %s' % (self.gc, new_gc))
+
+        if os.path.exists(self.gc):
+            status = os.system('cp %s %s' % (self.gc, new_gc))
+        self.nc = new_gc
+
+def _setup_parser(self):
 
