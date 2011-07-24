@@ -25,10 +25,10 @@ from checkpoint ?
 
 __docformat__ = 'restructuredtext'
 
-import exceptions, glob, os, pickle, string
+import exceptions, re, os, pickle, string
 import numpy as np
 import subprocess as sp
-from cclib.parser import Gaussian as gparse
+import cclib
 from ase import Atoms
 import logging
 
@@ -43,18 +43,18 @@ def coords_from_checkpoint(filename):
     if os.path.exists(filename):
         pass
 
-def coords_from_log(filename)
+def coords_from_log(filename):
     if os.path.exists(filename):
         pass
 
-def xyz_to_atoms(filename)
+def xyz_to_atoms(filename):
     if os.path.exists(filename):
         pass
 
 def job_from_log(filename):
     pass
 
-def read(basename)
+def read(basename):
     """ 
     Return atoms object from following inputs:
 
@@ -74,41 +74,40 @@ class Gaussian():
     __name__ = 'Gaussian'
     __version__ = '0.01'
 
+    default_jobs = {
+        'Density':[],
+        'Force':[],
+        'Freq':[],
+        'Geom':[],
+        'Guess':[],
+        'Massage':[],
+        'NMR':[],
+        'Opt':[],
+        'Polar':[],
+        'Pop':[],
+        'SCRF':[],
+        'SP':[],
+        'Scan':[],
+        'Volume':[]
+    }
+
+    default_kwrgs = {
+        'atoms':None,
+        'xc':'B3LYP',
+        'basis':'6-31+',
+        'job':{'SP':[]},
+        'multiplicity':1,
+        'charge':0,
+        'mem':0.5,
+        'header':None
+    }
+
     # additional parameters are passed to kwargs for input file creation
     def __init__(self,
                  basename = 'g09_test',
                  output = None,
                  debug=logging.WARN,
-                 **kwargs)
-        
-        default_jobs = {
-            'Density':[],
-            'Force':[],
-            'Freq':[],
-            'Geom':[],
-            'Guess':[],
-            'Massage':[],
-            'NMR':[],
-            'Opt':[],
-            'Polar':[],
-            'Pop':[],
-            'SCRF':[],
-            'SP':[],
-            'Scan':[],
-            'Volume':[]
-        }
-
-        default_kwrgs = {
-            'atoms':None,
-            'xc':'B3LYP',
-            'basis':'6-31+',
-            'job':{'SP':[]},
-            'multiplicity':1,
-            'charge':0,
-            'mem':0.5,
-            'header':None
-        }
-
+                 **kwargs):
         """
         Parameters that are defined
         
@@ -224,14 +223,14 @@ class Gaussian():
     def load_gc(self, gcfile):
         """ loads atoms and pertinent settings to calculator """
 
-            gc = open(gcfile, 'rb')
+        gc = open(gcfile, 'rb')
 
-            self.gc_kwargs = pickle.load(gc)
+        self.gc_kwargs = pickle.load(gc)
 
-            if 'atoms' not in old_kwargs:
-                log.debug('no atoms object was found in binary file')
-                gc.close()
-                raise Exception, 'binary file exists but does not contain atoms'
+        if 'atoms' not in self.gc_kwargs:
+            log.debug('no atoms object was found in binary file')
+            gc.close()
+            raise Exception, 'binary file exists but does not contain atoms'
 
     def save_gc(self, gcfile):
         """ save atoms, calc and pertinent settings to calculator """
@@ -251,7 +250,7 @@ class Gaussian():
             log.debug('copying %s to %s' % (self.gc, gc))
 
             if os.path.exists(self.gc):
-                status = os.system('cp %s %s' % (self.gc, gc))
+                os.system('cp %s %s' % (self.gc, gc))
             self.gc = gc
 
         # if exists, don't set it
@@ -287,21 +286,16 @@ class Gaussian():
     def format_input_string(self):
         pass
 
-
-
-"""
-TODO Additional Functions Needed:
-    Molecular mass
-    ThetaROT
-    ZPE
-    Sum of Elect + ZPE
-    Gibbs
-    CPU Time
-"""
-
-class Parser(gparse):
+class GaussianParser(cclib.parser.gaussianparser.Gaussian):
     """
     This class represents a wrapper for cclib's gaussian parser
+        TODO Additional Functions Needed:
+        Molecular mass
+        ThetaROT
+        ZPE
+        Sum of Elect + ZPE
+        Gibbs
+        CPU Time
     """
 
     def __init__(self, logfile):
@@ -380,7 +374,7 @@ class Parser(gparse):
 
     def make_atoms(self):
         from ase import Atoms
-        self.atoms = Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1]))
+        self.atoms = Atoms(numbers = self.data.atomnos, positions = self.data.atomcoords[-1])
 
 def calculate_distance(self, a1, a2):
     return False
@@ -391,6 +385,6 @@ def calculate_angle(self, a1, a2, a3):
     """
     l1 = self.get_bond_length(a1,a2)
     l2 = self.get_bond_length(a2,a3)
-    angle = numpy.arctan(l2/l1)
+    angle = np.arctan(l2/l1)
     return geom.degrees(angle)
 
