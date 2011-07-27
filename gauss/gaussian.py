@@ -13,11 +13,11 @@ from logfile
 >>> atoms = gc.get_atoms()
 
 *sp calculation*
->>> gc = Gaussian('single_point',job = {'SP':[]}, atoms=atoms)
+>>> gc = Gaussian('single_point',route = {'SP':[]}, atoms=atoms)
 
 *using header file*
 >>> gc = Gaussian('using_header',header = '#P Opt=tight
-                   Pop=(chelpg,hirschfield)'
+                   Pop=(chelpg,hirschfield)')
 
 from checkpoint ?
  TODO use izmat to obtain input string from checkpoint
@@ -31,6 +31,7 @@ import subprocess as sp
 import cclib
 from ase import Atoms
 import logging
+import io
 
 try:
     import cPickle as pickle
@@ -39,19 +40,7 @@ except:
 
 log = logging.getLogger('Gaussian')
 
-def coords_from_checkpoint(filename):
-    if os.path.exists(filename):
-        pass
-
-def coords_from_log(filename):
-    if os.path.exists(filename):
-        pass
-
-def xyz_to_atoms(filename):
-    if os.path.exists(filename):
-        pass
-
-def job_from_log(filename):
+def route_from_log(filename):
     pass
 
 def read(basename):
@@ -95,7 +84,7 @@ class Gaussian():
         'atoms':None,
         'xc':'B3LYP',
         'basis':'6-31+',
-        'job':{'SP':[]},
+        'route':{'SP':[]},
         'multiplicity':1,
         'charge':0,
         'mem':0.5,
@@ -139,7 +128,7 @@ class Gaussian():
                 basis : text
                  checked against possible gaussian parameters
 
-                job : dict
+                route : dict
                  contains optional keyword arguments to place in gaussian input,
                  keys are available as the Gaussian job options:
 
@@ -160,7 +149,7 @@ class Gaussian():
                  value in GB to reserve for memory
 
                 header : string 
-                 plain text header to overwrite entire job string, 
+                 plain text header to overwrite entire route string, 
                  ** disables the use of many methods **
 
                 header : string 
@@ -184,7 +173,7 @@ class Gaussian():
             >>> gau = Gaussian('water')
 
              restart previous optimization
-            >>> gau = Gaussian('CO2', job = {'opt':['restart']})
+            >>> gau = Gaussian('CO2', route = {'opt':['restart']})
 
         """
 
@@ -280,7 +269,7 @@ class Gaussian():
             atoms = None
         return atoms
 
-    def format_job_line(self):
+    def format_route(self):
         pass
 
     def format_input_string(self):

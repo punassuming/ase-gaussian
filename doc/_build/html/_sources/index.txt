@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to ase-gaussian's documentation!
-=================================
+========================================
 
 Contents:
 
@@ -16,12 +16,12 @@ Contents:
 Gaussian calculator
 ===================
 
-.. autoclass:: Gaussian
+.. autoclass:: gauss.gaussian.Gaussian
 
 Gaussian data parser
 ====================
 
-.. autoclass:: Parser
+.. autoclass:: gauss.gaussian.GaussianParser
 
 
 Indices and tables
