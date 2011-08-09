@@ -506,7 +506,7 @@ class Gaussian():
 
     def get_chg_hirshfeld(self):
         f = self.file
-        regexp= re.compile('(?:Hirshfeld spin densities).*[\0-9\-A-Z]*')
+        regexp= re.compile('(?:Hirshfeld spin densities, charges and dipoles).*[\0-9\-A-Z]*')
         try:
             charges = [i.split()[3] for i in regexp.findall(f)[-1].split("\n")[2:-1]]
         except:
