@@ -93,7 +93,7 @@ class Gaussian():
 		}
 
 
-"""
+    """
         Parameters that are defined
         
             basename : string
@@ -171,7 +171,7 @@ class Gaussian():
              restart previous optimization
             >>> gau = Gaussian('CO2', route = {'opt':['restart']})
 
-"""
+    """
     # additional parameters are passed to kwargs for input file creation
     def __init__(self,
                  basename = 'g09_test',
@@ -420,12 +420,13 @@ class Gaussian():
     #should I return this as a string or a floating point number?
     def get_ZPE(self):
 
-        if self.calculation_require({'freq': ""}):
+        if self.calculation_required({'freq': ""}):
             self.update_route({'freq': ""})
             self.write_gjf()
             self.calculate()
         
         exprZPE = re.compile('Zero-point correction.*')
+        
         try:
             ZPE_ht = float(exprZPE.findall(self.file)[-1].split()[2])
             #convert to hartree
@@ -436,16 +437,16 @@ class Gaussian():
 
     def get_homo_energy(self):
         try:
-            i_homo=self.get_homo_index
-            homo_energy= self.get_orbital_energies(i_homo)
+            i_homo=self.get_homo_index()
+            homo_energy= self.get_orbital_energies()[i_homo]
         except:
             homo_energy = 'cannot determine homo energy'
         return homo_energy
     
     def get_lumo_energy(self):
         try:
-            i_lumo = self.get_homo_index + 1
-            lumo_energy = self.get_orbital_energies(i_lumo)
+            i_lumo = self.get_homo_index() + 1
+            lumo_energy = self.get_orbital_energies()[i_lumo]
         except:
             lumo_energy = 'cannot determine lumo energy'
         return lumo_energy
@@ -482,7 +483,7 @@ class Gaussian():
         try:
             charges = [i.split()[-1] for i in regexp.findall(f)[-1].split('\n')[2:-2]]
         except:
-            charges ['chelpg charges not calculated']
+            charges=['chelpg charges not calculated']
         return charges
 
     def get_chg_mulliken(self):
