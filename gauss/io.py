@@ -10,7 +10,7 @@ kwargs = {'atoms':None,
 	'route':{'SP':[]},
 	'multiplicity':10,
 	'charge':10,
-	'mem':0.5,
+	'mem':2,
 	'desc':None
 	}
 
