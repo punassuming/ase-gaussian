@@ -178,6 +178,7 @@ class Gaussian():
                  output = None,
                  debug=logging.WARN,
                  status = 'New',
+                 new_gc = False,
                  **kwargs):
 
         self.debug = debug
@@ -194,7 +195,7 @@ class Gaussian():
         self.kwargs = kwargs
 
         # if gc file exists, load kwargs from file
-        if os.path.exists(self.gc):
+        if os.path.exists(self.gc) and not new_gc:
             # load gaussian object parameters from .gc binary file and should have to do nothing else
             #assuming we want all of the parameters that are currently written in .gc file
             #could possible update this to check if anythign needs to be updated 
@@ -291,7 +292,7 @@ class Gaussian():
         else:
             return False
 
-
+    
     def set_status(self, file):
         pass
     
@@ -364,10 +365,14 @@ class Gaussian():
         return atoms
 
     def format_route(self):
-        kwrd = ""
-        for key in self.params['route']:
-            options = ",".join(self.params['route'][key])
-            kwrds = key + "=(" + options + ") "
+        route = self.params['route']
+        kwrds = ""
+        for key in route:
+            if route[key]<>"":
+                kwrds = kwrds+ key + "=("+route[key]+")"
+            else:
+                kwrds = kwrds + key
+            kwrds = kwrds + " "
         this_route = "#" + self.params['xc']+"/"+self.params['basis'] +" " + kwrds
 
         return this_route
@@ -398,12 +403,20 @@ class Gaussian():
             return True
     
     def update_route(self, calc_def):
-        calc_key = calc_def.keys()[0]
-
-        if calc_key in self.kwargs['route']:
-            self.kwargs['route'][calc_key]=self.kwargs['route'][calc_key]+calc_def[calc_key]
-        else:
-            self.kwargs['route'][calc_key]=calc_def[calc_key]
+        for calc_key in calc_def:            
+            if calc_key in self.params['route']:
+                #current options are stored as a commas sperated string, this turns it into a list
+                current = self.params['route'][calc_key].split()
+            
+                #new options are inputted also as a comma seperated list, this turns it into a lit
+                for i in calc_def[calc_key].split():
+                    # if new options is not in current options, add to list
+                    if i not in current:
+                        current.append(i)
+                # set the kwrd options to comma seperted string based on new list of options
+                self.params['route'][calc_key] = ",".join(current)
+            else:
+                self.params['route'][calc_key]=calc_def[calc_key]
 
         self.save_gc
     
