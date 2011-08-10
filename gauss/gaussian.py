@@ -88,8 +88,8 @@ class Gaussian():
         'route':{'SP':[]},
         'multiplicity':1,
         'charge':0,
-        'mem':0.5,
-        'desc':""
+        'mem':2,
+        'desc':" "
 		}
 
 
@@ -594,12 +594,15 @@ class Gaussian():
 
     def write_gjf(self):
         gjf = open(self.gjf, 'wb')
-        gjf.writelines("%chk="+self.chk+"\n")
-        gjf.writelines("%mem="+str(self.params['mem'])+"\n")
+        gjf.writelines("%chk="+self.chk.split('/')[-1]+"\n")
+        gjf.writelines("%mem="+str(self.params['mem'])+"GB\n")
         gjf.writelines("%nproc = 1"+"\n")
-        gjf.writelines(self.format_route()+"\n")
-        gjf.writelines(self.params['desc']+"\n")
-        gjf.writelines(str(self.params['charge'])+str(self.params['multiplicity'])+"\n")
+        gjf.writelines(self.format_route()+"\n\n")
+        if self.params['desc'] <>None:
+            gjf.writelines(self.params['desc']+"\n\n")
+        else:
+            gjf.writelines(' \n\n')
+        gjf.writelines(str(self.params['charge'])+ " " +str(self.params['multiplicity'])+"\n")
 
         mol_nos=self.atoms.get_atomic_numbers()
         mol_coords = self.atoms.get_positions()
