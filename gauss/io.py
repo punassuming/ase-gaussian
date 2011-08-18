@@ -65,7 +65,7 @@ def get_calcParams(file):
         expHeader = re.compile('(?:#).*[\d\0-9.\-A-Za-z\s]*')
         readHeader = expHeader.findall(text)[0]
         readHeader = readHeader[:readHeader.find("\n ---")].replace("\n","").replace(", ", ",").replace(' ,', ',')
-        headerList = readHeader.split(' ')
+        headerList = readHeader.lower().split(' ')
 
         for i in headerList:
             index = i.lower().find(basis.lower())
@@ -73,9 +73,9 @@ def get_calcParams(file):
                 calcType = i[:index-1]
             else:
                 if i.find("=")<>-1:
-                    route.update({i[:i.find("=")].strip('#'):i[i.find("=")+1:].replace(')',"").replace("(","").strip()})
+                    route.update({i[:i.find("=")].strip('#'): i[i.find("=")+1:].replace(')',"").replace("(","").strip().split(",")})
                 else:
-                    route.update({i.strip("#"):""})
+                    route.update({i.strip("#"):[]})
     elif(file[-4:]=='.chk'):
         basis = ""
         calcType=""

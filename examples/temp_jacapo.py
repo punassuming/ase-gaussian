@@ -36,5 +36,6 @@ calc = Jacapo('Jacapo-test.nc',
 
 atoms.set_calculator(calc)
 
+#atoms object calls atoms class function get_potentital energy.  This calls the atoms' object calculators' function get_potentail_energy
 print atoms.get_potential_energy()
 os.system('rm -f Jacapo-test.nc Jacapo-test.txt')

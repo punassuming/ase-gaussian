@@ -23,7 +23,6 @@ from checkpoint ?
  TODO use izmat to obtain input string from checkpoint
 """
 
-
 __docformat__ = 'restructuredtext'
 
 import exceptions, re, os, pickle, string
@@ -85,11 +84,12 @@ class Gaussian():
         'atoms':None,
         'xc':'B3LYP',
         'basis':'6-31+',
-        'route':{'SP':[]},
+        'route':{'SP':''},
+        'additional_input':[],
         'multiplicity':1,
         'charge':0,
         'mem':2,
-        'desc':" "
+        'desc':"Gaussian Calculation"
 		}
 
 
@@ -196,7 +196,7 @@ class Gaussian():
 
         # if gc file exists, load kwargs from file
         if os.path.exists(self.gc) and not new_gc:
-            # load gaussian object parameters from .gc binary file and should have to do nothing else
+            #load gaussian object parameters from .gc binary file and should have to do nothing else
             #assuming we want all of the parameters that are currently written in .gc file
             #could possible update this to check if anythign needs to be updated 
             try:
@@ -367,15 +367,44 @@ class Gaussian():
     def format_route(self):
         route = self.params['route']
         kwrds = ""
-        for key in route:
-            if route[key]<>"":
-                kwrds = kwrds+ key + "=("+route[key]+")"
-            else:
-                kwrds = kwrds + key
-            kwrds = kwrds + " "
-        this_route = "#" + self.params['xc']+"/"+self.params['basis'] +" " + kwrds
+        eof_input =self.params['additional_input']
 
+        if 'restart' in route['opt']:
+            this_route = "#"+self.params['xc']+"/"+self.params['basis']+ " opt=(restart)"
+            print this_route
+            return this_route
+		
+        for key in route:
+            iop = ""
+            current_options = route[key]
+            if current_options<>[]:
+                kwrds = kwrds + key + "=("
+                for i in current_options:
+                    if i.find(':')<>-1:
+                        self.params['route'][key].pop(current_options.index(i))
+                        self.params['route'][key].append(i.split(":")[0])
+                        kwrds = kwrds + i.split(':')[0] +","
+                        eof_input.append(i.split(':')[1])
+                    elif i.find('iop=')<>-1:
+                        iop = i
+                    else:
+                        kwrds = kwrds + i + ","
+                if kwrds[-1] ==",":
+                    kwrds = kwrds[:-1]
+                kwrds = kwrds + ") "
+                if iop <> "":
+                    kwrds = kwrds + iop+ " "
+            else:
+                kwrds = kwrds + key + " "
+        this_route = "#" + self.params['xc']+"/"+self.params['basis'] +" " + kwrds
+        self.params['additional_input'] = eof_input
+        self.save_gc
         return this_route
+
+    def delete_keyword(self, key):
+        if key in calc.params['route'].keys():
+            del calc.params['route'][key]
+        return 
 
     def format_input_string(self):
         pass
@@ -402,22 +431,36 @@ class Gaussian():
         elif self.status == 'New':
             return True
     
-    def update_route(self, calc_def):
-        for calc_key in calc_def:            
-            if calc_key in self.params['route']:
-                #current options are stored as a commas sperated string, this turns it into a list
-                current = self.params['route'][calc_key].split()
-            
-                #new options are inputted also as a comma seperated list, this turns it into a lit
-                for i in calc_def[calc_key].split():
-                    # if new options is not in current options, add to list
-                    if i not in current:
-                        current.append(i)
-                # set the kwrd options to comma seperted string based on new list of options
-                self.params['route'][calc_key] = ",".join(current)
-            else:
-                self.params['route'][calc_key]=calc_def[calc_key]
 
+    '''
+    user inputs gaussian keyword as string and any keyword options as a comma seperated list.  Input keyword IOp options as an option to the keyword IOp=XXX.  For options that require additional input after geometry sepcfication like modRedundant, input as option and additional information with colon speration. example: ..., option: additional information, ..  
+    '''
+    def update_route(self, calc_def):
+        # for stirng comparision peruposes, convert entire cal_def dictionary to lowercase since Gaussian is not case sensitive
+        for key in calc_def.keys():
+            if key <> key.lower():
+                calc_def[key.lower()]=calc_def[key].lower()
+                del calc_def[key]
+                
+            elif calc_def[key] <> calc_def[key].lower():
+                calc_def[key]=calc_def[key].lower()
+
+        for kwrd in calc_def:
+            #convert user string input into list
+            new_options = calc_def[kwrd].split(',')
+            if new_options == ['']:
+                new_options = []
+
+            #option 1: keyword is already in route dictionary, add or modify options list based on new options
+            if kwrd in self.params['route']:
+                for i in new_options:
+                    if i == 'restart' and kwrd == 'opt':
+                        self.params['route']['opt'] = ['restart']
+                    elif i not in self.params['route'][kwrd]: 
+                        self.params['route'][kwrd].append(i)
+            #option 2: keyword is not in dictionary yet, just add it 
+            else:
+                self.params['route'][kwrd]=calc_def[kwrd]
         self.save_gc
     
     def get_potential_energy(self, atoms=None):
@@ -597,23 +640,33 @@ class Gaussian():
         gjf.writelines("%chk="+self.chk.split('/')[-1]+"\n")
         gjf.writelines("%mem="+str(self.params['mem'])+"GB\n")
         gjf.writelines("%nproc = 1"+"\n")
-        gjf.writelines(self.format_route()+"\n\n")
-        if self.params['desc'] <>None:
-            gjf.writelines(self.params['desc']+"\n\n")
+        route = self.format_route()
+        gjf.writelines(route+"\n\n")
+
+        if route.find('restart')==-1:
+        
+            if self.params['desc'] <>None:
+                gjf.writelines(self.params['desc']+"\n\n")
+            else:
+                gjf.writelines(' \n\n')
+            gjf.writelines(str(self.params['charge'])+ " " +str(self.params['multiplicity'])+"\n")
+
+            mol_nos=self.atoms.get_atomic_numbers()
+            mol_coords = self.atoms.get_positions()
+
+            for i in range(len(mol_nos)):
+                j = mol_coords[i]
+                gjf.writelines(str(mol_nos[i]) + ' ' + str(j[0]) + ' '+ str(j[1])+ ' '+ str(j[2])+"\n")
+
+            #insert end of file write for custom spec, like PCM model
+            for i in self.params['additional_input']:
+                gjf.writelines("\n")
+                gjf.writelines(i +"\n")
+
+            gjf.write("\n\n\n")
         else:
-            gjf.writelines(' \n\n')
-        gjf.writelines(str(self.params['charge'])+ " " +str(self.params['multiplicity'])+"\n")
-
-        mol_nos=self.atoms.get_atomic_numbers()
-        mol_coords = self.atoms.get_positions()
+            gjf.write("\n\n\n")
         
-        for i in range(len(mol_nos)):
-            j = mol_coords[i]
-            gjf.writelines(str(mol_nos[i]) + ' ' + str(j[0]) + ' '+ str(j[1])+ ' '+ str(j[2])+"\n")
-
-        #insert end of file write for custom spec, like PCM model
-        
-        gjf.write("\n\n\n")
         gjf.close()
         
 class GaussianParser(cclib.parser.gaussianparser.Gaussian):
